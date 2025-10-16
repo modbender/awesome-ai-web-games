@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Bubble Wrap - Pop Away Your Stress!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: #f0f0f0;
+            --bubble-color: #ffffff;
+            --bubble-shadow: rgba(0, 0, 0, 0.1);
+            --text-color: #333;
+            --accent: #667eea;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body.dark-mode {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-secondary: #2d2d44;
+            --bubble-color: #e0e0e0;
+            --bubble-shadow: rgba(255, 255, 255, 0.1);
+            --text-color: #f0f0f0;
+            --accent: #764ba2;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .dark-mode header {
+            background: rgba(30, 30, 45, 0.95);
+            color: var(--text-color);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dark-mode h1 {
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .dark-mode .stat-label {
+            color: #aaa;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .sound-toggle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .sound-toggle {
+            background: var(--bg-secondary);
+        }
+
+        .sound-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .sound-toggle.muted {
+            opacity: 0.5;
+        }
+
+        .theme-toggle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .theme-toggle {
+            background: var(--bg-secondary);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .bubble-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 10px;
+            max-width: 1200px;
+            width: 100%;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .bubble {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, var(--bubble-color), #e0e0e0);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 
+                inset -5px -5px 10px var(--bubble-shadow),
+                inset 5px 5px 10px rgba(255, 255, 255, 0.5),
+                0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .bubble::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 20%;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent);
+            border-radius: 50%;
+        }
+
+        .bubble:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                inset -5px -5px 10px var(--bubble-shadow),
+                inset 5px 5px 10px rgba(255, 255, 255, 0.5),
+                0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .bubble.popped {
+            animation: pop 0.3s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #667eea, #764ba2);
+            border-radius: 50%;
+            animation: particle-fly 0.8s ease-out forwards;
+        }
+
+        @keyframes particle-fly {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .combo-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+            pointer-events: none;
+            opacity: 0;
+            animation: combo-flash 1s ease-out;
+        }
+
+        @keyframes combo-flash {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .speed-indicator {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .dark-mode .speed-indicator {
+            background: rgba(30, 30, 45, 0.9);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats {
+                gap: 1rem;
+            }
+            
+            .bubble {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .bubble-container {
+                gap: 8px;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>
+                <span>🫧</span>
+                Digital Bubble Wrap
+            </h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="popCount">0</span>
+                    <span class="stat-label">Popped</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="comboCount">0</span>
+                    <span class="stat-label">Combo</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="highScore">0</span>
+                    <span class="stat-label">High Score</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="resetBtn">Reset Bubbles</button>
+                <button id="megaPopBtn">Mega Pop!</button>
+                <div class="sound-toggle" id="soundToggle">
+                    <span id="soundIcon">🔊</span>
+                </div>
+                <div class="theme-toggle" id="themeToggle">
+                    <span id="themeIcon">🌙</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="bubble-container" id="bubbleContainer"></div>
+    </main>
+
+    <div class="speed-indicator" id="speedIndicator">
+        Speed: <span id="speedValue">0</span> pops/sec
+    </div>
+
+    <script>
+        class BubbleWrapGame {
+            constructor() {
+                this.bubbles = [];
+                this.popCount = 0;
+                this.comboCount = 0;
+                this.highScore = parseInt(localStorage.getItem('bubbleHighScore') || '0');
+                this.soundEnabled = true;
+                this.lastPopTime = 0;
+                this.popSpeed = 0;
+                this.popTimes = [];
+                this.darkMode = false;
+                
+                this.init();
+            }
+
+            init() {
+                this.createBubbles();
+                this.attachEventListeners();
+                this.updateHighScore();
+                this.createAudioContext();
+            }
+
+            createAudioContext() {
+                // Create audio context for sound effects
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playPopSound(frequency = 800) {
+                if (!this.soundEnabled) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.1);
+            }
+
+            createBubbles() {
+                const container = document.getElementById('bubbleContainer');
+                container.innerHTML = '';
+                this.bubbles = [];
+                
+                const bubbleCount = window.innerWidth < 768 ? 48 : 96;
+                
+                for (let i = 0; i < bubbleCount; i++) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    bubble.dataset.index = i;
+                    bubble.style.animationDelay = `${Math.random() * 3}s`;
+                    
+                    bubble.addEventListener('click', (e) => this.popBubble(e, bubble));
+                    bubble.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.popBubble(e, bubble);
+                    });
+                    
+                    container.appendChild(bubble);
+                    this.bubbles.push(bubble);
+                }
+            }
+
+            popBubble(event, bubble) {
+                if (bubble.classList.contains('popped')) return;
+                
+                bubble.classList.add('popped');
+                this.popCount++;
+                
+                // Calculate combo
+                const currentTime = Date.now();
+                if (currentTime - this.lastPopTime < 500) {
+                    this.comboCount++;
+                    if (this.comboCount > 5 && this.comboCount % 5 === 0) {
+                        this.showComboIndicator();
+                    }
+                } else {
+                    this.comboCount = 1;
+                }
+                this.lastPopTime = currentTime;
+                
+                // Calculate pop speed
+                this.popTimes.push(currentTime);
+                this.popTimes = this.popTimes.filter(time => currentTime - time < 1000);
+                this.popSpeed = this.popTimes.length;
+                
+                // Update UI
+                this.updateStats();
+                
+                // Play sound with slight variation
+                const frequency = 800 + Math.random() * 400;
+                this.playPopSound(frequency);
+                
+                // Create particle effect
+                this.createParticles(event.clientX, event.clientY);
+                
+                // Check if all bubbles are popped
+                if (this.bubbles.every(b => b.classList.contains('popped'))) {
+                    setTimeout(() => this.celebrateCompletion(), 500);
+                }
+            }
+
+            createParticles(x, y) {
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    const angle = (Math.PI * 2 * i) / 8;
+                    const distance = 50 + Math.random() * 50;
+                    particle.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                    particle.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+                    
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
+                }
+            }
+
+            showComboIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'combo-indicator';
+                indicator.textContent = `${this.comboCount}x COMBO!`;
+                document.body.appendChild(indicator);
+                setTimeout(() => indicator.remove(), 1000);
+            }
+
+            updateStats() {
+                document.getElementById('popCount').textContent = this.popCount;
+                document.getElementById('comboCount').textContent = this.comboCount;
+                document.getElementById('speedValue').textContent = this.popSpeed;
+                
+                if (this.popCount > this.highScore) {
+                    this.highScore = this.popCount;
+                    localStorage.setItem('bubbleHighScore', this.highScore.toString());
+                    this.updateHighScore();
+                }
+            }
+
+            updateHighScore() {
+                document.getElementById('highScore').textContent = this.highScore;
+            }
+
+            resetBubbles() {
+                this.bubbles.forEach(bubble => {
+                    bubble.classList.remove('popped');
+                });
+                this.popCount = 0;
+                this.comboCount = 0;
+                this.popSpeed = 0;
+                this.popTimes = [];
+                this.updateStats();
+            }
+
+            megaPop() {
+                const unpoppedBubbles = this.bubbles.filter(b => !b.classList.contains('popped'));
+                const popDelay = 50;
+                
+                unpoppedBubbles.forEach((bubble, index) => {
+                    setTimeout(() => {
+                        const rect = bubble.getBoundingClientRect();
+                        const event = {
+                            clientX: rect.left + rect.width / 2,
+                            clientY: rect.top + rect.height / 2
+                        };
+                        this.popBubble(event, bubble);
+                    }, index * popDelay);
+                });
+            }
+
+            celebrateCompletion() {
+                const message = document.createElement('div');
+                message.className = 'combo-indicator';
+                message.textContent = '🎉 ALL POPPED! 🎉';
+                message.style.fontSize = '4rem';
+                document.body.appendChild(message);
+                setTimeout(() => message.remove(), 2000);
+                
+                // Auto reset after celebration
+                setTimeout(() => this.resetBubbles(), 2500);
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                const icon = document.getElementById('soundIcon');
+                const toggle = document.getElementById('soundToggle');
+                
+                if (this.soundEnabled) {
+                    icon.textContent = '🔊';
+                    toggle.classList.remove('muted');
+                } else {
+                    icon.textContent = '🔇';
+                    toggle.classList.add('muted');
+                }
+            }
+
+            toggleTheme() {
+                this.darkMode = !this.darkMode;
+                const icon = document.getElementById('themeIcon');
+                
+                if (this.darkMode) {
+                    document.body.classList.add('dark-mode');
+                    icon.textContent = '☀️';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    icon.textContent = '🌙';
+                }
+            }
+
+            attachEventListeners() {
+                document.getElementById('resetBtn').addEventListener('click', () => this.resetBubbles());
+                document.getElementById('megaPopBtn').addEventListener('click', () => this.megaPop());
+                document.getElementById('soundToggle').addEventListener('click', () => this.toggleSound());
+                document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'r' || e.key === 'R') {
+                        this.resetBubbles();
+                    } else if (e.key === 'm' || e.key === 'M') {
+                        this.megaPop();
+                    } else if (e.key === 's' || e.key === 'S') {
+                        this.toggleSound();
+                    } else if (e.key === 't' || e.key === 'T') {
+                        this.toggleTheme();
+                    }
+                });
+            }
+        }
+
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new BubbleWrapGame();
+        });
+    </script>
+</body>
+</html>
